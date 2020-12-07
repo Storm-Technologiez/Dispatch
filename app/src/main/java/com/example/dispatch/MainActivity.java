@@ -32,6 +32,12 @@ public class MainActivity extends AppCompatActivity {
         uId = "qE9xsFcEMlTXSMGLUKi1siaUZPA2";
         // CheckActiveDelivery();
 
+        /*
+            I don't know what is wrong with this bottom navigation
+            Just run it and check what the problem is
+            Thank you
+         */
+
         BottomNavigationView bottomNav = (BottomNavigationView) findViewById(R.id.bottom_nav1);
 
         setContentView(R.layout.activity_main);
