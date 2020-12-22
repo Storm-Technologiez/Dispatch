@@ -113,7 +113,7 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.Delive
 
             final AlertDialog.Builder alert = new AlertDialog.Builder(itemView.getContext());
             alert.setTitle("Delivery " + selected_delivery.getDelivery_id());
-            alert.setMessage("Pick up point: \n" + selected_delivery.getAddress());
+            alert.setMessage("Pick up point: \n" + selected_delivery.getPickUpAddress());
             alert.setPositiveButton("Accept", (dialog, which) -> {
 
                 DeliveryRun pickedDelivery = new DeliveryRun(selected_delivery.getOrder_Id(), selected_delivery.getName(),
