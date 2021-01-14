@@ -1,7 +1,10 @@
 package com.example.dispatch.constructors;
 
+import com.google.firebase.firestore.IgnoreExtraProperties;
+
 import java.io.Serializable;
 
+@IgnoreExtraProperties
 public class DeliveryRun implements Serializable {
     public String order_Id;
     public String name;
@@ -12,9 +15,10 @@ public class DeliveryRun implements Serializable {
     public String userId;
     public String pickUpTime;
     public String deliveryTime;
+    public String imageUrl;
 
-    public DeliveryRun(String order_Id, String name, String address, String phone, String delivery_id, String pickUpAddress, String userId,
-                       String pickUpTime, String deliveryTime) {
+    public DeliveryRun(String order_Id, String name, String address, String phone, String delivery_id, String pickUpAddress,
+                       String userId, String pickUpTime, String deliveryTime, String imageUrl) {
         this.order_Id = order_Id;
         this.name = name;
         this.address = address;
@@ -24,6 +28,7 @@ public class DeliveryRun implements Serializable {
         this.userId = userId;
         this.pickUpTime = pickUpTime;
         this.deliveryTime = deliveryTime;
+        this.imageUrl = imageUrl;
     }
 
     public DeliveryRun() {
@@ -99,5 +104,13 @@ public class DeliveryRun implements Serializable {
 
     public void setDeliveryTime(String deliveryTime) {
         this.deliveryTime = deliveryTime;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

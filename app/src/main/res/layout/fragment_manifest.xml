@@ -10,7 +10,7 @@
         android:id="@+id/tv_stat"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/purple_200"
+        android:background="#E4E4E4"
         android:paddingStart="14dp"
         android:paddingTop="5dp"
         android:paddingBottom="5dp"
@@ -26,7 +26,7 @@
         android:id="@+id/view_stats"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/purple_500"
+        android:background="#04B791"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_stat">
@@ -86,12 +86,12 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <Switch
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switch1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_marginStart="30dp"
+            android:layout_marginStart="25dp"
             android:layout_toEndOf="@id/tv_dailyEarn_number"
             android:text="Offline"
             android:textColor="@color/white" />
@@ -101,7 +101,7 @@
         android:id="@+id/Tv_schedules"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/purple_200"
+        android:background="#E4E4E4"
         android:paddingStart="14dp"
         android:paddingTop="5dp"
         android:paddingEnd="5dp"

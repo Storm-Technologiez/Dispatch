@@ -10,7 +10,7 @@
         android:id="@+id/rl_progress"
         android:layout_width="match_parent"
         android:layout_height="36dp"
-        android:background="@color/purple_200"
+        android:background="#04B791"
         map:layout_constraintEnd_toEndOf="parent"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent">
@@ -22,7 +22,7 @@
             android:layout_centerVertical="true"
             android:layout_marginStart="17dp"
             android:text="Pick up in progress"
-            android:textColor="@color/black"
+            android:textColor="@color/white"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -47,7 +47,7 @@
             android:onClick="ShowMap"
             android:padding="5dp"
             android:text="Show Map"
-            android:textColor="@color/black"
+            android:textColor="@color/white"
             android:textSize="14sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -314,6 +314,7 @@
                 android:layout_marginStart="10dp"
                 android:onClick="CallSender"
                 android:text="Call Sender"
+                android:textColor="#04B791"
                 android:textStyle="bold" />
 
             <Button
@@ -329,6 +330,7 @@
                 android:layout_marginEnd="10dp"
                 android:onClick="CancelDelivery"
                 android:text="Cancel Pick"
+                android:textColor="#FE3232"
                 android:textStyle="bold" />
         </GridLayout>
 
@@ -344,6 +346,7 @@
             android:text="Call Receiver"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="#04B791"
             android:visibility="invisible" />
 
     </RelativeLayout>

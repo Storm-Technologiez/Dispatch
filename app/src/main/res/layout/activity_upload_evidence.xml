@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".UploadEvidenceActivity">
+
+    <RelativeLayout
+        android:id="@+id/toolBar_header"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#7826BB"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/header_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:text="confirm delivery "
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolBar_header"
+        android:layout_marginTop="26dp"
+        android:text="Upload Photo Evidence"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_below="@id/textView1"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="13dp"
+        android:layout_marginEnd="20dp"
+        android:src="@drawable/ic_placeholder" />
+
+    <com.makeramen.roundedimageview.RoundedImageView
+        android:id="@+id/capture_image"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_below="@id/imageView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:onClick="TakePicture"
+        android:src="@drawable/ic_camera"
+        app:riv_oval="true" />
+
+    <Button
+        android:id="@+id/upload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/capture_image"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:background="#9D4EDD"
+        android:onClick="UploadEvidence"
+        android:text="upload"
+        android:textColor="@color/white" />
+
+</RelativeLayout>

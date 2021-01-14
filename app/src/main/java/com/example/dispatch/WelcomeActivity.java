@@ -28,7 +28,8 @@ public class WelcomeActivity extends AppCompatActivity {
     }
 
     public void GotoSignUp(View view) {
-
+        startActivity(new Intent(WelcomeActivity.this, SignUpActivity.class));
+        finish();
     }
 
     private boolean RestoreData() {

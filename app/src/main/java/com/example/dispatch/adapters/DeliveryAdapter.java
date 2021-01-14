@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.dispatch.DeliveryInfoMapsActivity;
 import com.example.dispatch.R;
 import com.example.dispatch.constructors.DeliveryRun;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -25,7 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.DeliveryViewHolder> {
-
+    String userId;
     FirebaseDatabase mDatabase;
     DatabaseReference mRef;
     ArrayList<DeliveryRun> deliveries;
@@ -36,6 +37,7 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.Delive
         mDatabase = FirebaseDatabase.getInstance();
         mRef = mDatabase.getReference();
         deliveries = new ArrayList<>();
+        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         mListener = new ChildEventListener() {
             @Override
@@ -119,10 +121,9 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.Delive
                 DeliveryRun pickedDelivery = new DeliveryRun(selected_delivery.getOrder_Id(), selected_delivery.getName(),
                         selected_delivery.getAddress(), selected_delivery.getPhone(), selected_delivery.getDelivery_id(),
                         selected_delivery.pickUpAddress, selected_delivery.getUserId(), selected_delivery.getPickUpTime(),
-                        selected_delivery.getDeliveryTime());
+                        selected_delivery.getDeliveryTime(), selected_delivery.getImageUrl());
 
-                mRef.child("delivery_in_progress").child(selected_delivery.getUserId() // ToDo: this is supposed to be the rider uId.
-                ).setValue(pickedDelivery)
+                mRef.child("delivery_in_progress").child(userId).setValue(pickedDelivery)
                         .addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
                                 mRef.child("scheduled_deliveries").child(selected_delivery.getOrder_Id())
