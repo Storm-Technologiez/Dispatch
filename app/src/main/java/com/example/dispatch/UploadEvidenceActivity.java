@@ -1,5 +1,6 @@
 package com.example.dispatch;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
@@ -35,6 +36,7 @@ public class UploadEvidenceActivity extends AppCompatActivity {
     StorageReference mStorage;
     FirebaseFirestore db;
     DocumentReference deliveryRef;
+    ProgressDialog progressBar = new ProgressDialog(this);
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -63,19 +65,24 @@ public class UploadEvidenceActivity extends AppCompatActivity {
     }
 
     public void UploadEvidence(View view) {
-        ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteOutput);
-        byte[] file = byteOutput.toByteArray();
+        if (bitmap != null) {
+            Loading();
+            ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteOutput);
+            byte[] file = byteOutput.toByteArray();
 
-        if (file != null) {
-            mStorage.putBytes(file)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            GetDownloadUrl();
-                            Toast.makeText(this, "Uploaded", Toast.LENGTH_SHORT).show();
-                            finish();
-                        }
-                    });
+            if (file != null) {
+                mStorage.putBytes(file)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                GetDownloadUrl();
+                                Toast.makeText(this, "Uploaded", Toast.LENGTH_SHORT).show();
+                                finish();
+                            }
+                        });
+            }
+        } else {
+            Toast.makeText(this, "Take a picture first", Toast.LENGTH_SHORT).show();
         }
 
     }
@@ -86,8 +93,11 @@ public class UploadEvidenceActivity extends AppCompatActivity {
                 String url = uri.toString();
                 Log.i("URL", url);
                 deliveryRef.update("imageUrl", url).addOnCompleteListener(task -> {
+                    if (task.isSuccessful())
+                        progressBar.dismiss();
                 });
             } else {
+                progressBar.dismiss();
                 Toast.makeText(UploadEvidenceActivity.this, "Upload Error", Toast.LENGTH_SHORT).show();
             }
         });
@@ -96,12 +106,17 @@ public class UploadEvidenceActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (requestCode == Request_Code && data != null) {
-                Bundle extras = data.getExtras();
-                bitmap = (Bitmap) extras.get("data");
-                imageView.setImageBitmap(bitmap);
-            }
+        if (requestCode == Request_Code && resultCode == RESULT_OK && data != null) {
+            Bundle extras = data.getExtras();
+            bitmap = (Bitmap) extras.get("data");
+            imageView.setImageBitmap(bitmap);
         }
+    }
+
+    private void Loading() {
+        progressBar.setTitle("Please Wait...");
+        progressBar.show();
+        progressBar.setCanceledOnTouchOutside(false);
+        progressBar.setCancelable(false);
     }
 }

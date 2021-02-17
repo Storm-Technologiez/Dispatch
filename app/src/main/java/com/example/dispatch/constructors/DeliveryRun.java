@@ -1,8 +1,10 @@
 package com.example.dispatch.constructors;
 
 import com.google.firebase.firestore.IgnoreExtraProperties;
+import com.google.firebase.firestore.ServerTimestamp;
 
 import java.io.Serializable;
+import java.util.Date;
 
 @IgnoreExtraProperties
 public class DeliveryRun implements Serializable {
@@ -16,9 +18,13 @@ public class DeliveryRun implements Serializable {
     public String pickUpTime;
     public String deliveryTime;
     public String imageUrl;
+    public @ServerTimestamp
+    Date date;
+    public Double latitude;
+    public Double longitude;
 
-    public DeliveryRun(String order_Id, String name, String address, String phone, String delivery_id, String pickUpAddress,
-                       String userId, String pickUpTime, String deliveryTime, String imageUrl) {
+    public DeliveryRun(String order_Id, String name, String address, String phone, String delivery_id, String pickUpAddress, String userId,
+                       String pickUpTime, String deliveryTime, String imageUrl, Date date, Double latitude, Double longitude) {
         this.order_Id = order_Id;
         this.name = name;
         this.address = address;
@@ -29,6 +35,9 @@ public class DeliveryRun implements Serializable {
         this.pickUpTime = pickUpTime;
         this.deliveryTime = deliveryTime;
         this.imageUrl = imageUrl;
+        this.date = date;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public DeliveryRun() {
@@ -112,5 +121,29 @@ public class DeliveryRun implements Serializable {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

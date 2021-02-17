@@ -1,6 +1,7 @@
 package com.example.dispatch.adapters;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -93,6 +94,7 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.Delive
 
     public class DeliveryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView delivery_Id, pick_address;
+        ProgressDialog progressBar = new ProgressDialog(itemView.getContext());
 
         public DeliveryViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -110,18 +112,19 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.Delive
         public void onClick(View v) {
             int position = getAdapterPosition();
             selected_delivery = deliveries.get(position);
-
-            // CheckActiveDelivery();
+            GetSenderLocation();
 
             final AlertDialog.Builder alert = new AlertDialog.Builder(itemView.getContext());
             alert.setTitle("Delivery " + selected_delivery.getDelivery_id());
             alert.setMessage("Pick up point: \n" + selected_delivery.getPickUpAddress());
             alert.setPositiveButton("Accept", (dialog, which) -> {
 
+                Loading();
                 DeliveryRun pickedDelivery = new DeliveryRun(selected_delivery.getOrder_Id(), selected_delivery.getName(),
                         selected_delivery.getAddress(), selected_delivery.getPhone(), selected_delivery.getDelivery_id(),
                         selected_delivery.pickUpAddress, selected_delivery.getUserId(), selected_delivery.getPickUpTime(),
-                        selected_delivery.getDeliveryTime(), selected_delivery.getImageUrl());
+                        selected_delivery.getDeliveryTime(), selected_delivery.getImageUrl(), selected_delivery.getDate(),
+                        selected_delivery.getLatitude(), selected_delivery.getLongitude());
 
                 mRef.child("delivery_in_progress").child(userId).setValue(pickedDelivery)
                         .addOnCompleteListener(task -> {
@@ -129,6 +132,7 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.Delive
                                 mRef.child("scheduled_deliveries").child(selected_delivery.getOrder_Id())
                                         .removeValue().addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
+                                        progressBar.dismiss();
                                         Intent intent = new Intent(itemView.getContext(), DeliveryInfoMapsActivity.class);
                                         intent.putExtra("delivery", selected_delivery);
                                         itemView.getContext().startActivity(intent);
@@ -140,6 +144,41 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.Delive
             alert.setNegativeButton("Reject", (dialog, which) ->
                     dialog.cancel());
             alert.show();
+        }
+
+        /**
+         * The method below is throwing null pointer error
+         * but it still gets the item and upload to db
+         */
+        private void GetSenderLocation() {
+            mRef.child("scheduled_deliveries").child(selected_delivery.getOrder_Id()).child("latLng")
+                    .addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            double latitude, longitude;
+                            String Lat, Long;
+                            Lat = snapshot.child("latitude").getValue().toString();
+                            Long = snapshot.child("longitude").getValue().toString();
+
+                            latitude = Double.parseDouble(Lat);
+                            longitude = Double.parseDouble(Long);
+
+                            selected_delivery.setLatitude(latitude);
+                            selected_delivery.setLongitude(longitude);
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+        }
+
+        private void Loading() {
+            progressBar.setTitle("Please Wait...");
+            progressBar.show();
+            progressBar.setCanceledOnTouchOutside(false);
+            progressBar.setCancelable(false);
         }
 
         private void CheckActiveDelivery() {

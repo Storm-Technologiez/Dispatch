@@ -1,6 +1,5 @@
 package com.example.dispatch;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -27,6 +26,7 @@ import com.example.dispatch.fragments.AccountFragment;
 import com.example.dispatch.fragments.EmergencyFragment;
 import com.example.dispatch.fragments.ManifestFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -43,6 +43,13 @@ public class MainActivity extends AppCompatActivity {
     RelativeLayout Toolbar;
     TextView HeaderText;
     ImageView moreOption;
+    static MainActivity instance;
+    BottomSheetBehavior bottomSheetBehavior;
+
+    public static MainActivity getInstance() {
+
+        return instance;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -51,11 +58,19 @@ public class MainActivity extends AppCompatActivity {
         // CheckActiveDelivery();
         setContentView(R.layout.activity_main);
 
-        CheckGps();
+        View bottomSheet = findViewById(R.id.bottom_sheet);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        bottomSheetBehavior.setHideable(true);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+
+        if (!CheckGps()) {
+            showSettingsAlert();
+        }
 
         mRef = FirebaseDatabase.getInstance().getReference();
         uId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        BottomNavigationView bottomNav = (BottomNavigationView) findViewById(R.id.bottom_nav1);
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav1);
         Toolbar = findViewById(R.id.toolBar_header);
         HeaderText = findViewById(R.id.header_text);
         moreOption = findViewById(R.id.option);
@@ -111,31 +126,20 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void CheckGps() {
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        boolean gps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        if (!gps) {
-            showSettingsAlert();
-        }
+    public void GpsSettings(View view) {
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        MainActivity.this.startActivity(intent);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
-    private void showSettingsAlert() {
-        final AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-        alert.setTitle("Turn on GPS");
-        alert.setMessage("GPS is required for app's location services to work. \nGo to settings menu and enable GPS.");
+    public Boolean CheckGps() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
 
-        alert.setPositiveButton("Settings", (dialog, which) -> {
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            MainActivity.this.startActivity(intent);
-        });
-
-        alert.setNegativeButton("Cancel", (dialog, which) -> {
-            dialog.cancel();
-            finish();
-        });
-        alert.setCancelable(false);
-        alert.show();
+    public void showSettingsAlert() {
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        bottomSheetBehavior.setDraggable(false);
     }
 
     private void LoadFragment(Fragment fragment) {
@@ -148,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
         editor.putBoolean("state", false);
         editor.apply();

@@ -33,6 +33,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.example.dispatch.constructors.DeliveryRun;
+import com.example.dispatch.constructors.RtDelivery;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
@@ -49,6 +50,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -74,10 +76,10 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
     private static final int PLAY_REQUEST_RES_REQUEST = 21;
     private static final int UPDATE_INTERVAL = 2000;
     private static final int FASTEST_INTERVAL = 300;
+    private static final int DISPLACEMENT = 2;
 
     ProgressDialog progressBar;
     DeliveryRun delivery;
-    private static final int DISPLACEMENT = 5;
     TextView deliveryNumber, deliveryAddress, receiverName, receiverPhone, S_name, S_address, S_phone;
     TextView textProgress, textShowMap, pickUpTime, deliveryTime, senderDetail;
     Button ConfirmPickDelivery, callSender, cancelDelivery, callReceiver;
@@ -94,41 +96,13 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
     String userId;
     String senderPhoneNumber, receiverPhoneNumber, senderId, senderName;
     GeoFire geoFire;
-    Marker mCurrent;
+    Marker mCurrent, pickLocation;
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
 
     public void CancelDelivery(View view) {
         cancelDeliveryRun();
-    }
-
-    private void cancelDeliveryRun() {
-        final AlertDialog.Builder alert = new AlertDialog.Builder(DeliveryInfoMapsActivity.this);
-        alert.setTitle("Cancel Delivery");
-        alert.setMessage("Confirm you want to cancel this delivery run.");
-        alert.setPositiveButton("Continue", (dialog, which) -> {
-
-            DeliveryRun RtDelivery = new DeliveryRun(delivery.getOrder_Id(), delivery.getName(), delivery.getAddress(), delivery.getPhone(),
-                    delivery.getDelivery_id(), delivery.getPickUpAddress(), delivery.getUserId(), "", "", "");
-
-            Loading();
-            mRef.child(getString(node_scheduled_deliveries)).child(delivery.getOrder_Id()).setValue(RtDelivery)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            mRef.child(getString(R.string.node_delivery)).child(userId).removeValue().addOnCompleteListener(task1 -> {
-                                if (task1.isSuccessful()) {
-                                    progressBar.dismiss();
-                                    Toast.makeText(this, "Delivery Cancelled", Toast.LENGTH_SHORT).show();
-                                    finish();
-                                }
-                            });
-                        }
-                    });
-        });
-        alert.setNegativeButton("Cancel", (dialog, which) ->
-                dialog.cancel());
-        alert.show();
     }
 
     public void ConfirmPickDelivery(View view) {
@@ -167,6 +141,9 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         setContentView(R.layout.activity_delivery_info_maps);
 
         CheckPhonePermission();
+        CheckGps();
+        Intent intent = getIntent();
+        delivery = (DeliveryRun) intent.getSerializableExtra("delivery");
         //startLocationUpdate();
 
         profileImage = findViewById(R.id.image_sender);
@@ -212,9 +189,6 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         buttonGrid = findViewById(R.id.grid_button);
         mapLayout = findViewById(R.id.map_layout);
 
-        Intent intent = getIntent();
-        delivery = (DeliveryRun) intent.getSerializableExtra("delivery");
-
         receiverPhoneNumber = delivery.getPhone();
 
         deliveryNumber.setText(delivery.getDelivery_id());
@@ -247,24 +221,6 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
             });
         }
 
-        /*
-        mRef.child("delivery_in_progress").child(uId).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String test = snapshot.child("isPicked").getValue().toString();
-                if (test.equals("true")) {
-                    SwitchDetails();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-
-         */
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -274,8 +230,18 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
         displayLocation();
+
+        //  Log.i("coordinates", delivery.getSenderLocation().toString());
+        if (delivery.getLatitude() != null && delivery.getLongitude() != null) {
+            pickLocation = mMap.addMarker(new MarkerOptions()
+                    .icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_pick))
+                    .position(new LatLng(delivery.getLatitude(), delivery.getLongitude()))
+                    .title("Pick up Location"));
+        } else {
+            Toast.makeText(this, "sender coordinates not found", Toast.LENGTH_LONG).show();
+        }
+
     }
 
     public void ConfirmPickUp() {
@@ -324,7 +290,8 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
 
             } else {
                 progressBar.dismiss();
-                Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(getCurrentFocus().getRootView(), task.getException().getMessage(), Snackbar.LENGTH_LONG).show();
             }
         });
     }
@@ -337,10 +304,41 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         });
     }
 
+    private void cancelDeliveryRun() {
+        final AlertDialog.Builder alert = new AlertDialog.Builder(DeliveryInfoMapsActivity.this);
+        alert.setTitle("Cancel Delivery");
+        alert.setMessage("Confirm you want to cancel this delivery run.");
+        alert.setPositiveButton("Continue", (dialog, which) -> {
+
+            LatLng senderLocation = new LatLng(delivery.getLatitude(), delivery.getLongitude());
+            RtDelivery RtDelivery = new RtDelivery(delivery.getName(), delivery.getAddress(), delivery.getPhone(), delivery.getDelivery_id(),
+                    delivery.getPickUpAddress(), delivery.getUserId(), delivery.getPickUpTime(), delivery.getDeliveryTime(),
+                    delivery.getImageUrl(), senderLocation);
+
+            Loading();
+            mRef.child(getString(node_scheduled_deliveries)).child(delivery.getOrder_Id()).setValue(RtDelivery)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            mRef.child(getString(R.string.node_delivery)).child(userId).removeValue().addOnCompleteListener(task1 -> {
+                                if (task1.isSuccessful()) {
+                                    progressBar.dismiss();
+                                    Toast.makeText(this, "Delivery Cancelled", Toast.LENGTH_SHORT).show();
+                                    finish();
+                                }
+                            });
+                        }
+                    });
+        });
+        alert.setNegativeButton("Cancel", (dialog, which) ->
+                dialog.cancel());
+        alert.show();
+    }
+
     public void ShowMap(View view) {
         if (textShowMap.getText().toString().toLowerCase().equals("show map")) {
             SwitchToMapView();
         } else {
+            stopLocationUpdate();
             senderDetail.setText("Sender Details:");
             textShowMap.setText("Show Map");
             detailsLayout.setVisibility(View.VISIBLE);
@@ -358,9 +356,12 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         textProgress.setText("Delivery in Progress");
         ConfirmPickDelivery.setText("Confirm Delivery");
         ConfirmPickDelivery.setTextSize(13);
+        pickLocation.remove();
     }
 
     public void SwitchToMapView() {
+        startLocationUpdate();
+        displayLocation();
         senderDetail.setText("Receiver Details:");
         textShowMap.setText("Hide Map");
         detailsLayout.setVisibility(View.GONE);
@@ -383,7 +384,6 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
             if (checkPlayServices()) {
                 buildGoogleApiClient();
                 createLocationRequest();
-                displayLocation();
             }
         }
     }
@@ -444,19 +444,16 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
             final double latitude = mLastLocation.getLatitude();
             final double longitude = mLastLocation.getLongitude();
 
-            geoFire.setLocation(userId, new GeoLocation(latitude, longitude), new GeoFire.CompletionListener() {
-                @Override
-                public void onComplete(String key, DatabaseError error) {
-                    if (mCurrent != null)
-                        mCurrent.remove();
+            geoFire.setLocation(userId, new GeoLocation(latitude, longitude), (key, error) -> {
+                if (mCurrent != null)
+                    mCurrent.remove();
 
-                    mCurrent = mMap.addMarker(new MarkerOptions()
-                            .icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_bike))
-                            .position(new LatLng(latitude, longitude))
-                            .title("Your Location"));
+                mCurrent = mMap.addMarker(new MarkerOptions()
+                        .icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_bike))
+                        .position(new LatLng(latitude, longitude))
+                        .title("Your Location"));
 
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 16.5f));
-                }
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 16.5f));
             });
         } else {
             Log.i("ERROR", "Cannot get your location");
@@ -482,7 +479,6 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
                     if (checkPlayServices()) {
                         buildGoogleApiClient();
                         createLocationRequest();
-                        displayLocation();
                     }
                 }
         }
@@ -490,24 +486,12 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void CallSender(View view) {
-        Intent intent = new Intent(Intent.ACTION_CALL);
-        intent.setData(Uri.parse("tel:" + senderPhoneNumber));
-        if (checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.CALL_PHONE}, 10);
-            return;
-        }
-        startActivity(intent);
+        Call(senderPhoneNumber);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void CallReceiver(View view) {
-        Intent intent = new Intent(Intent.ACTION_CALL);
-        intent.setData(Uri.parse("tel:" + receiverPhoneNumber));
-        if (checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.CALL_PHONE}, 10);
-            return;
-        }
-        startActivity(intent);
+        Call(receiverPhoneNumber);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -516,6 +500,17 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.CALL_PHONE}, 10);
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void Call(String PhoneNumber) {
+        Intent intent = new Intent(Intent.ACTION_CALL);
+        intent.setData(Uri.parse("tel:" + PhoneNumber));
+        if (checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CALL_PHONE}, 10);
+            return;
+        }
+        startActivity(intent);
     }
 
     private void Loading() {
@@ -531,7 +526,6 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(), vectorDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         vectorDrawable.draw(canvas);
-
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 

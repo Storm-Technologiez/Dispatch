@@ -94,7 +94,9 @@
             android:layout_marginStart="25dp"
             android:layout_toEndOf="@id/tv_dailyEarn_number"
             android:text="Offline"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:thumb="@drawable/thumb_design"
+            app:track="@drawable/track_design" />
     </RelativeLayout>
 
     <TextView

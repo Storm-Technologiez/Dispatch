@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.dispatch.MainActivity;
 import com.example.dispatch.R;
 import com.example.dispatch.adapters.DeliveryAdapter;
 import com.google.android.material.snackbar.Snackbar;
@@ -24,6 +25,7 @@ public class ManifestFragment extends Fragment {
     SwitchCompat aSwitch;
     RecyclerView rvDelivery;
     TextView dailyEarning, dailyStat;
+    MainActivity mainActivity;
 
     public ManifestFragment() {
         // Required empty public constructor
@@ -38,11 +40,17 @@ public class ManifestFragment extends Fragment {
         aSwitch = view.findViewById(R.id.switch1);
         dailyEarning = view.findViewById(R.id.tv_dailyEarn_number);
         dailyStat = view.findViewById(R.id.tv_compStats_number);
+        mainActivity = new MainActivity();
 
         aSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 riderOnline();
                 Snackbar.make(view.getRootView(), "Your are Active and working.", Snackbar.LENGTH_SHORT).show();
+//                if (!(MainActivity.getInstance().CheckGps())) {
+//                    MainActivity.getInstance().showSettingsAlert();
+//                } else {
+//
+//                }
             } else {
                 aSwitch.setChecked(false);
                 riderOffline();
@@ -80,6 +88,11 @@ public class ManifestFragment extends Fragment {
         editor.apply();
     }
 
+//    private boolean gps(){
+//        Boolean chk = mainActivity.CheckGps();
+//        return chk;
+//    }
+
     private boolean isRiderActive() {
         SharedPreferences prefs = view.getContext().getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         Boolean isActive = prefs.getBoolean("state", false);
@@ -89,7 +102,6 @@ public class ManifestFragment extends Fragment {
     private void LoadFeeds() {
         final DeliveryAdapter adapter = new DeliveryAdapter();
         rvDelivery.setAdapter(adapter);
-        rvDelivery.setHasFixedSize(true);
 
         LinearLayoutManager layoutManager =
                 new LinearLayoutManager(view.getContext(), RecyclerView.VERTICAL, false);
