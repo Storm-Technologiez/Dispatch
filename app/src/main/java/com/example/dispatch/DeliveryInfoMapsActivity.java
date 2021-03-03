@@ -32,8 +32,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
+import com.directions.route.AbstractRouting;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
 import com.example.dispatch.constructors.DeliveryRun;
-import com.example.dispatch.constructors.RtDelivery;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
@@ -41,6 +45,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -50,6 +55,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -64,13 +71,15 @@ import com.makeramen.roundedimageview.RoundedImageView;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static com.example.dispatch.R.string.node_scheduled_deliveries;
 
 public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener, RoutingListener {
 
     private static final int PERMISSION_REQUEST_CODE = 20;
     private static final int PLAY_REQUEST_RES_REQUEST = 21;
@@ -100,6 +109,8 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
+    private LatLng start, end;
+    private List<Polyline> polylines = null;
 
     public void CancelDelivery(View view) {
         cancelDeliveryRun();
@@ -230,6 +241,13 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
         displayLocation();
 
         //  Log.i("coordinates", delivery.getSenderLocation().toString());
@@ -243,6 +261,22 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         }
 
     }
+
+    private void FindRoutes(LatLng start, LatLng end) {
+        if (start == null || end == null) {
+            Toast.makeText(this, "Unable to get location", Toast.LENGTH_LONG).show();
+        } else {
+            Routing routing = new Routing.Builder()
+                    .travelMode(AbstractRouting.TravelMode.DRIVING)
+                    .withListener(this)
+                    .alternativeRoutes(false)
+                    .waypoints(start, end)
+                    .key("AIzaSyDme05LYCGVlTAupfcaLiMqbxq_mRyprGc")  //also define your api key here.
+                    .build();
+            routing.execute();
+        }
+    }
+
 
     public void ConfirmPickUp() {
         DateFormat format = new SimpleDateFormat("hh:mm aa");
@@ -310,10 +344,11 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         alert.setMessage("Confirm you want to cancel this delivery run.");
         alert.setPositiveButton("Continue", (dialog, which) -> {
 
-            LatLng senderLocation = new LatLng(delivery.getLatitude(), delivery.getLongitude());
-            RtDelivery RtDelivery = new RtDelivery(delivery.getName(), delivery.getAddress(), delivery.getPhone(), delivery.getDelivery_id(),
-                    delivery.getPickUpAddress(), delivery.getUserId(), delivery.getPickUpTime(), delivery.getDeliveryTime(),
-                    delivery.getImageUrl(), senderLocation);
+            DeliveryRun RtDelivery = new DeliveryRun(delivery.getOrder_Id(), delivery.getName(),
+                    delivery.getAddress(), delivery.getPhone(), delivery.getDelivery_id(),
+                    delivery.getPickUpAddress(), delivery.getUserId(), delivery.getPickUpTime(),
+                    delivery.getDeliveryTime(), delivery.getImageUrl(), delivery.getDate(),
+                    delivery.getLatitude(), delivery.getLongitude());
 
             Loading();
             mRef.child(getString(node_scheduled_deliveries)).child(delivery.getOrder_Id()).setValue(RtDelivery)
@@ -455,6 +490,9 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
 
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 16.5f));
             });
+
+            start = new LatLng(latitude, longitude);
+            end = new LatLng(delivery.getLatitude(), delivery.getLongitude());
         } else {
             Log.i("ERROR", "Cannot get your location");
         }
@@ -578,5 +616,72 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    @Override
+    public void onRoutingFailure(RouteException e) {
+        Toast.makeText(this, "Failed, Retrying...", Toast.LENGTH_SHORT).show();
+        Log.i("Routing error", e.toString());
+        // FindRoutes(start,end);
+    }
+
+    @Override
+    public void onRoutingStart() {
+        Toast.makeText(this, "Finding Route...", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
+        CameraUpdate center = CameraUpdateFactory.newLatLng(start);
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(16.5f);
+
+        if (polylines != null) {
+            polylines.clear();
+        }
+
+        PolylineOptions polyOptions = new PolylineOptions();
+        LatLng polylineStartLatLng = null;
+        LatLng polylineEndLatLng = null;
+
+        polylines = new ArrayList<>();
+        //add route(s) to the map using polyline
+        for (int i = 0; i < route.size(); i++) {
+
+            if (i == shortestRouteIndex) {
+                polyOptions.color(getResources().getColor(R.color.purple_500));
+                polyOptions.width(9);
+                polyOptions.addAll(route.get(shortestRouteIndex).getPoints());
+                Polyline polyline = mMap.addPolyline(polyOptions);
+                polylineStartLatLng = polyline.getPoints().get(0);
+                int k = polyline.getPoints().size();
+                polylineEndLatLng = polyline.getPoints().get(k - 1);
+                polylines.add(polyline);
+
+            }
+        }
+
+        /*
+        //Add Marker on route starting position
+        MarkerOptions startMarker = new MarkerOptions();
+        startMarker.position(polylineStartLatLng);
+        startMarker.title("My Location");
+        mMap.addMarker(startMarker);
+
+        //Add Marker on route ending position
+        MarkerOptions endMarker = new MarkerOptions();
+        endMarker.position(polylineEndLatLng);
+        endMarker.title("Destination");
+        mMap.addMarker(endMarker);
+
+         */
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+
+    }
+
+    public void GetDirection(View view) {
+        FindRoutes(start, end);
     }
 }

@@ -112,17 +112,15 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.Delive
         public void onClick(View v) {
             int position = getAdapterPosition();
             selected_delivery = deliveries.get(position);
-            GetSenderLocation();
 
             final AlertDialog.Builder alert = new AlertDialog.Builder(itemView.getContext());
             alert.setTitle("Delivery " + selected_delivery.getDelivery_id());
             alert.setMessage("Pick up point: \n" + selected_delivery.getPickUpAddress());
             alert.setPositiveButton("Accept", (dialog, which) -> {
-
                 Loading();
                 DeliveryRun pickedDelivery = new DeliveryRun(selected_delivery.getOrder_Id(), selected_delivery.getName(),
                         selected_delivery.getAddress(), selected_delivery.getPhone(), selected_delivery.getDelivery_id(),
-                        selected_delivery.pickUpAddress, selected_delivery.getUserId(), selected_delivery.getPickUpTime(),
+                        selected_delivery.getPickUpAddress(), selected_delivery.getUserId(), selected_delivery.getPickUpTime(),
                         selected_delivery.getDeliveryTime(), selected_delivery.getImageUrl(), selected_delivery.getDate(),
                         selected_delivery.getLatitude(), selected_delivery.getLongitude());
 
@@ -144,34 +142,6 @@ public class DeliveryAdapter extends RecyclerView.Adapter<DeliveryAdapter.Delive
             alert.setNegativeButton("Reject", (dialog, which) ->
                     dialog.cancel());
             alert.show();
-        }
-
-        /**
-         * The method below is throwing null pointer error
-         * but it still gets the item and upload to db
-         */
-        private void GetSenderLocation() {
-            mRef.child("scheduled_deliveries").child(selected_delivery.getOrder_Id()).child("latLng")
-                    .addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            double latitude, longitude;
-                            String Lat, Long;
-                            Lat = snapshot.child("latitude").getValue().toString();
-                            Long = snapshot.child("longitude").getValue().toString();
-
-                            latitude = Double.parseDouble(Lat);
-                            longitude = Double.parseDouble(Long);
-
-                            selected_delivery.setLatitude(latitude);
-                            selected_delivery.setLongitude(longitude);
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-
-                        }
-                    });
         }
 
         private void Loading() {

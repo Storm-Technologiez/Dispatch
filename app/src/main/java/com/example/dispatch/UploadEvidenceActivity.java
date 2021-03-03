@@ -1,6 +1,5 @@
 package com.example.dispatch;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
@@ -36,7 +35,7 @@ public class UploadEvidenceActivity extends AppCompatActivity {
     StorageReference mStorage;
     FirebaseFirestore db;
     DocumentReference deliveryRef;
-    ProgressDialog progressBar = new ProgressDialog(this);
+//    ProgressDialog progressBar = new ProgressDialog(UploadEvidenceActivity.this);
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -66,7 +65,7 @@ public class UploadEvidenceActivity extends AppCompatActivity {
 
     public void UploadEvidence(View view) {
         if (bitmap != null) {
-            Loading();
+            // Loading();
             ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteOutput);
             byte[] file = byteOutput.toByteArray();
@@ -93,11 +92,11 @@ public class UploadEvidenceActivity extends AppCompatActivity {
                 String url = uri.toString();
                 Log.i("URL", url);
                 deliveryRef.update("imageUrl", url).addOnCompleteListener(task -> {
-                    if (task.isSuccessful())
-                        progressBar.dismiss();
+                    // if (task.isSuccessful())
+                    // progressBar.dismiss();
                 });
             } else {
-                progressBar.dismiss();
+                //  progressBar.dismiss();
                 Toast.makeText(UploadEvidenceActivity.this, "Upload Error", Toast.LENGTH_SHORT).show();
             }
         });
@@ -113,10 +112,10 @@ public class UploadEvidenceActivity extends AppCompatActivity {
         }
     }
 
-    private void Loading() {
-        progressBar.setTitle("Please Wait...");
-        progressBar.show();
-        progressBar.setCanceledOnTouchOutside(false);
-        progressBar.setCancelable(false);
-    }
+//    private void Loading() {
+//        progressBar.setTitle("Please Wait...");
+//        progressBar.show();
+//        progressBar.setCanceledOnTouchOutside(false);
+//        progressBar.setCancelable(false);
+//    }
 }

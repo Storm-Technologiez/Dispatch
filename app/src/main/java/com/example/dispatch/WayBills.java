@@ -36,7 +36,7 @@ public class WayBills extends AppCompatActivity {
     }
 
     private void LoadData() {
-        Query query = waybillRef.orderBy("date", Query.Direction.ASCENDING);
+        Query query = waybillRef.orderBy("date", Query.Direction.DESCENDING);
 
         FirestoreRecyclerOptions<DeliveryRun> options = new FirestoreRecyclerOptions.Builder<DeliveryRun>()
                 .setQuery(query, DeliveryRun.class)
