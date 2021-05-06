@@ -7,6 +7,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -15,7 +16,7 @@ import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -28,14 +29,12 @@ import com.example.dispatch.fragments.ManifestFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity {
     final String MY_PREFS_NAME = "switchCheckedState";
+    private static final int GPS_RESULT = 42;
     DatabaseReference mRef;
     String uId;
     String test;
@@ -47,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
     BottomSheetBehavior bottomSheetBehavior;
 
     public static MainActivity getInstance() {
-
         return instance;
     }
 
@@ -128,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void GpsSettings(View view) {
         Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-        MainActivity.this.startActivity(intent);
+        MainActivity.this.startActivityForResult(intent, GPS_RESULT);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
@@ -161,17 +159,12 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(getApplicationContext(), WayBills.class));
     }
 
-    public void CheckActiveDelivery() {
-        mRef.child(getString(R.string.node_delivery)).child(uId).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                test = String.valueOf(snapshot.child("delivery_id").getValue());
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == GPS_RESULT && resultCode == RESULT_OK) {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            Log.i("Intent Result", "OK");
+        }
     }
 }

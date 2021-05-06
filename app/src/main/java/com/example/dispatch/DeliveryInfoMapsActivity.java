@@ -105,7 +105,7 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
     String userId;
     String senderPhoneNumber, receiverPhoneNumber, senderId, senderName;
     GeoFire geoFire;
-    Marker mCurrent, pickLocation;
+    Marker Begin, End, pickLocation;
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
@@ -200,12 +200,11 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         buttonGrid = findViewById(R.id.grid_button);
         mapLayout = findViewById(R.id.map_layout);
 
-        receiverPhoneNumber = delivery.getPhone();
-
         deliveryNumber.setText(delivery.getDelivery_id());
         deliveryAddress.setText(delivery.getAddress());
         receiverName.setText(delivery.getName());
         receiverPhone.setText(receiverPhoneNumber);
+        receiverPhoneNumber = delivery.getPhone();
 
         /**
          * Fetching Sender's details by Id
@@ -249,7 +248,8 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         }
         mMap.setMyLocationEnabled(true);
         displayLocation();
-
+        // FindRoutes(start, end);
+/*
         //  Log.i("coordinates", delivery.getSenderLocation().toString());
         if (delivery.getLatitude() != null && delivery.getLongitude() != null) {
             pickLocation = mMap.addMarker(new MarkerOptions()
@@ -259,6 +259,7 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
         } else {
             Toast.makeText(this, "sender coordinates not found", Toast.LENGTH_LONG).show();
         }
+         */
 
     }
 
@@ -480,19 +481,20 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
             final double longitude = mLastLocation.getLongitude();
 
             geoFire.setLocation(userId, new GeoLocation(latitude, longitude), (key, error) -> {
-                if (mCurrent != null)
-                    mCurrent.remove();
-
-                mCurrent = mMap.addMarker(new MarkerOptions()
-                        .icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_bike))
-                        .position(new LatLng(latitude, longitude))
-                        .title("Your Location"));
+//                if (mCurrent != null)
+//                    mCurrent.remove();
+//
+//                mCurrent = mMap.addMarker(new MarkerOptions()
+//                        .icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_bike))
+//                        .position(new LatLng(latitude, longitude))
+//                        .title("Your Location"));
 
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 16.5f));
             });
 
             start = new LatLng(latitude, longitude);
             end = new LatLng(delivery.getLatitude(), delivery.getLongitude());
+            //  FindRoutes(start, end);
         } else {
             Log.i("ERROR", "Cannot get your location");
         }
@@ -634,9 +636,12 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
     public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
         CameraUpdate center = CameraUpdateFactory.newLatLng(start);
         CameraUpdate zoom = CameraUpdateFactory.zoomTo(16.5f);
+        mMap.animateCamera(center);
 
-        if (polylines != null) {
+        if (polylines != null && Begin != null && End != null) {
             polylines.clear();
+            Begin.remove();
+            End.remove();
         }
 
         PolylineOptions polyOptions = new PolylineOptions();
@@ -660,20 +665,19 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
             }
         }
 
-        /*
         //Add Marker on route starting position
         MarkerOptions startMarker = new MarkerOptions();
         startMarker.position(polylineStartLatLng);
+        startMarker.icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_bike));
         startMarker.title("My Location");
-        mMap.addMarker(startMarker);
+        Begin = mMap.addMarker(startMarker);
 
         //Add Marker on route ending position
         MarkerOptions endMarker = new MarkerOptions();
         endMarker.position(polylineEndLatLng);
-        endMarker.title("Destination");
-        mMap.addMarker(endMarker);
-
-         */
+        endMarker.icon(bitmapDescriptorFromVector(getApplicationContext(), R.drawable.ic_pick));
+        endMarker.title(delivery.getPickUpAddress());
+        End = mMap.addMarker(endMarker);
     }
 
     @Override

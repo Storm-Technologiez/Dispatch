@@ -4,6 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/img_background"
+    android:backgroundTint="@color/black2"
+    android:backgroundTintMode="src_atop"
     tools:context=".LoginActivity">
 
     <TextView
@@ -13,7 +16,7 @@
         android:layout_marginStart="35dp"
         android:layout_marginTop="176dp"
         android:text="Welcome, log in to continue"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -33,9 +36,9 @@
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:paddingStart="10dp"
             android:background="@drawable/edit_text_design"
-            android:hint="Email" />
+            android:hint="Email"
+            android:paddingStart="10dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -53,10 +56,10 @@
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:paddingStart="10dp"
             android:background="@drawable/edit_text_design"
             android:hint="Password"
-            android:inputType="textPassword" />
+            android:inputType="textPassword"
+            android:paddingStart="10dp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
@@ -67,7 +70,7 @@
         android:layout_marginEnd="21dp"
         android:onClick="ForgotPassword"
         android:text="Forgot Password"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/et_password" />

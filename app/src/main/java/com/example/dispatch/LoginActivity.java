@@ -79,8 +79,11 @@ public class LoginActivity extends AppCompatActivity {
     private void SaveDetails() {
         SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
         editor.putBoolean("firstTimeUser", false);
-//        editor.putInt("idName", 12);
         editor.apply();
+    }
+
+    public void ForgotPassword(View view) {
+
     }
 
     private void Loading() {
@@ -88,9 +91,5 @@ public class LoginActivity extends AppCompatActivity {
         progressBar.show();
         progressBar.setCanceledOnTouchOutside(false);
         progressBar.setCancelable(false);
-    }
-
-    public void ForgotPassword(View view) {
-
     }
 }
