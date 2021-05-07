@@ -272,7 +272,7 @@ public class DeliveryInfoMapsActivity extends FragmentActivity implements OnMapR
                     .withListener(this)
                     .alternativeRoutes(false)
                     .waypoints(start, end)
-                    .key("AIzaSyDme05LYCGVlTAupfcaLiMqbxq_mRyprGc")  //also define your api key here.
+                    .key("")  //also define your api key here.
                     .build();
             routing.execute();
         }
